@@ -1,98 +1,80 @@
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState } from "react";
+import Tabla from "./Tabla";
 
-const List = ()=>{
-
-    const [data, setData] = useState([])
-
-    useEffect(()=>{
-        fetch('https://back-asistencias.onrender.com/check')
-        .then((response)=>response.json())
-        .then((data)=>setData(data.body))
-    }, [])
-
-    const time = new Date()
-    const year = time.getFullYear()
-    const month = time.getMonth()
-    const day = time.getDate()
-
-    const hour = time.getHours()
-    const min = time.getMinutes()
-    // const hour = 15
-    // const min = 36
-
-    const check = {
-        y: year,
-        mo: month+1,
-        d: day,
-        h: hour,
-        m: min
-    } 
+const List = ({data, check})=>{
 
     const [checkIn, setCheckIn] = useState(false)
     const [checkOff, setCheckOff] = useState(false)
 
     const addRegister = async ()=>{
 
-        console.log(hour != 8  && hour != 15 ? 'Fuera de Tiempo!' : '')
+        console.log(check.hour != 8  && check.hour != 15 ? 'Fuera de Tiempo!' : '')
 
-        if(!checkIn && hour==8 && min>=0 && min<=15){
+        if(!checkIn && check.hour==8 && check.min>=0 && check.min<=15){
 
             let setInfoEntrada = {
-                fecha: check.y +"-"+ check.mo +"-"+ check.d,
-                in: check.h +":"+ check.m
+                fecha: check.year +"-"+ check.month +"-"+ check.day,
+                in: check.hour +":"+ check.min
             }
 
-            let miEntrada = await fetch("https://back-asistencias.onrender.com/check", {
+            await fetch("https://miastencia.onrender.com/check", {
+            // await fetch("http://localhost:3000/check", {
                 method: "POST",
                 headers:{
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(setInfoEntrada)
             })
+            .then(data=>{return data.json()})
+            .then(res=>{console.log(res.body)})
+            .catch(error=>{console.log(error)})
         
-            console.log( miEntrada.ok ? 'Registro Exitoso' : 'Fallo el registro')
-
             setCheckIn(true)            
-            console.log('Se registro la entrada')
 
-        }else if(!checkIn && hour==8 && min>=16 && min<=30){
+        }else if(!checkIn && check.hour==8 && check.min>=16 && check.min<=30){
 
             let setInfoEntrada = {
-                fecha: check.y +"-"+ check.mo +"-"+ check.d,
-                in: check.h +":"+ check.m
+                fecha: check.year +"-"+ check.month +"-"+ check.day,
+                in: check.hour +":"+ check.min
             }
 
-            let miEntrada = await fetch("https://back-asistencias.onrender.com/check", {
+            await fetch("https://miastencia.onrender.com/check", {
+            // await fetch("http://localhost:3000/check", {
                 method: "POST",
                 headers:{
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(setInfoEntrada)
             })
-
-            console.log( miEntrada.ok ? 'Registro de entrada con Retardo' : 'Fallo el registro')
+            .then(data=>{return data.json()})
+            .then(res=>{console.log(res.body)})
+            .catch(error=>{console.log(error)})
+            
             setCheckIn(true)
             
         }else if(checkIn){
             console.log('Ya se ha registrado la entrada')
         }
 
-        if(!checkOff && hour==15 && min>=30 && min<=59){
+        if(!checkOff && check.hour==15 && check.min>=30 && check.min<=59){
 
             let setInfoSalida = {
-                fecha: check.y +"-"+ check.mo +"-"+ check.d,
-                out: check.h +":"+ check.m
+                fecha: check.year +"-"+ check.month +"-"+ check.day,
+                out: check.hour +":"+ check.min
             }
 
-            let miSalida = await fetch("https://back-asistencias.onrender.com/check", {
+            await fetch("https://miastencia.onrender.com/check", {
+            // await fetch("http://localhost:3000/check", {
                 method: "PUT",
                 headers:{
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(setInfoSalida)
             })
+            .then(data=>{return data.json()})
+            .then(res=>{console.log(res.body)})
+            .catch(error=>{console.log(error)})
 
-            console.log( miSalida.ok ? 'Registro Exitoso' : 'Fallo el registro')        
             setCheckOff(true)
 
         }else if(checkOff){
@@ -101,20 +83,15 @@ const List = ()=>{
             console.log('No se registro su salida')
         }
     }
-
-    const listarData = data.map( item => <li key={item._id}>{item.fecha} - {item.in} - {item.out}</li>)
     
     return(
         <Fragment>
-            <button onClick={addRegister}>Registrar</button>
+            <button className="btn btn-primary btn-lg" onClick={addRegister}>{check.hour != 8  && check.hour != 15 ? 'Espere a que inicie el horario de registro' : 'CHECAR'}</button>
+            
+            <h5>{checkIn ? 'Registrada su entrada!' : ''}</h5>
+            <h5>{checkOff ? 'Registrada su Salida!' : ''}</h5>
             <hr />
-            <h1>{hour != 8  && hour != 15 ? 'Espere a que inicie el horario de registro' : ''}</h1>
-            <h1>{checkIn ? 'Registrada su entrada!' : ''}</h1>
-            <h1>{checkOff ? 'Registrada su Salida!' : ''}</h1>
-            <hr />
-            <ul>
-                {listarData}
-            </ul>
+            <Tabla data={data}/>
         </Fragment>
     )
 }
